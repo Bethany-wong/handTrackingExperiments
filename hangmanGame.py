@@ -44,7 +44,7 @@ noHandCount = 0
 
 # game variables
 lives = 7
-answer = random.choice(resource.wordList).upper()
+answer = random.choice(resource.wordList + resource.hangman_words).upper()
 print(f"answer is {answer}")
 guessedWord = ['_' for _ in range(len(answer))]
 wrongGuesses = []
@@ -108,6 +108,7 @@ while True:
     pTime = cTime
 
     cv2.putText(img, f"FPS: {int(fps)}", (400, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0))
+    cv2.rectangle(img, (180, 40), (350, 120), (0, 255, 0), cv2.FILLED) # background
     cv2.putText(img, code, (200, 70), cv2.FONT_HERSHEY_PLAIN, 4, (0, 0, 0), 6)
     cv2.putText(img, "".join(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 10)
     cv2.putText(img, "".join(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
@@ -124,8 +125,6 @@ while True:
 if lives == 0:
     print("")
     print("You lose")
-    #cv2.putText(img, "You lose", (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
 else:
     print("You won")
-    #cv2.putText(img, "You won", (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
 print(f"The word is: {answer}")
