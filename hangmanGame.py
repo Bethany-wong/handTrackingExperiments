@@ -1,15 +1,19 @@
+import random
+
 import cv2
 import time
 import os
 import handTrackingModule as htm
 import morseTree as morse
 import numpy as np
+import hangmanResources as resource
 
-# parameters
-numDot = 1 # number of fingers detected to represent a dot (thumb not included)
-numDash = 4 # same for dash
-addSpaceAfter = 100 # append a space after certain frames of inactivity
-detectAlphabetAfter = 35 # interpret code after period of inactivity
+def updateGuessedWord(answer, guessedWord, guess):
+    for position in range(len(answer)):
+        letter = answer[position]
+        if letter == guess:
+            guessedWord[position] = letter
+            return guessedWord
 
 def detectNumbers(lmList):
     tipIds = [4, 8, 12, 16, 20]  # thumb, index, middle, ring, pinkie
@@ -34,6 +38,12 @@ def displayCurrentSymbol(fingerCnt):
         h, w, c = holdImage.shape
         img[0:h, 0:w] = holdImage
 
+print("Hello")
+
+# parameters
+numDot = 1 # number of fingers detected to represent a dot (thumb not included)
+numDash = 4 # same for dash
+detectAlphabetAfter = 35 # interpret code after period of inactivity
 
 wCam, hCam = 640, 480
 
@@ -48,12 +58,18 @@ holdImage = cv2.imread("dot_dash_symbol/hold.png")
 pTime = 0 # previous time
 detector = htm.handDetector(detectionCon=0.75)
 code = ""
-currWord = ""
 lastState = 0 # last detected gesture (0, 1, 5)
 cnt = 0 # no. frames of the latest state
 detected = False # already detected alphabet after period of inactivity
 noHandCount = 0
-#inactivityBar = 400
+
+# game variables
+stages = resource.stages
+lives = len(stages)
+answer = random.choice(resource.wordList)
+print(f"answer is {answer}")
+guessedWord = ['_' for _ in range(len(answer))]
+wrongGuesses = []
 
 while True:
     success, img = cap.read()
@@ -76,28 +92,27 @@ while True:
                     alphabet = morse.traverse_morse_tree(code)
                     print(alphabet)
                     if alphabet != None:
-                        currWord += alphabet
+                        if alphabet in answer:
+                            guessedWord = updateGuessedWord(answer, guessedWord, alphabet)
+                        elif alphabet not in wrongGuesses:
+                            print("Wrong guess")
+                            wrongGuesses.append(alphabet)
+                            lives -= 1
+                            if lives == 0:
+                                break
+                        else:
+                            print("You've already guessed the letter")
+                    else:
+                        print("Invalid morse code")
                     code = ""
                     print("reset")
-                elif cnt > addSpaceAfter and len(currWord) > 0 and currWord[-1] != " ": # add a space after period of inactivity
-                    print("New Word")
-                    currWord += " "
         else:
             lastState = totalFingers
             cnt = 0
             detected = False
             print(code)
-            alphabet = morse.traverse_morse_tree(code)
-            if alphabet == None:
-                code = ""
-                print("reset")
-            elif len(code) == 4:
-                currWord += alphabet
-                code = ""
-                print("reset")
 
         displayCurrentSymbol(totalFingers)
-        #inactivityBar = np.interp(cnt, [50, 300], [0, 100])
 
 
     cTime = time.time()
@@ -105,10 +120,16 @@ while True:
     pTime = cTime
 
     cv2.putText(img, f"FPS: {int(fps)}", (400, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0))
-    cv2.putText(img, currWord, (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 10)
-    cv2.putText(img, currWord, (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
-    #cv2.rectangle(img, (50, 150), (85, 150+addSpaceAfter), (255, 0, 0), 3)  # frame of volume bar
-    #cv2.rectangle(img, (50, int(inactivityBar)), (85, 150+addSpaceAfter), (255, 0, 0), cv2.FILLED)
+    cv2.putText(img, str(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 10)
+    cv2.putText(img, str(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
+    cv2.putText(img, stages[len(stages) - lives], (10, 300), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 10)
 
     cv2.imshow("Image", img)
     cv2.waitKey(1)
+
+
+# end of game
+if lives == 0:
+    cv2.putText(img, "You lose", (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
+else:
+    cv2.putText(img, "You won", (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)

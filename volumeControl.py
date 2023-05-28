@@ -18,8 +18,6 @@ pTime = 0 # previous time
 detector = htm.handDetector(detectionCon=0.7)
 
 
-
-
 devices = AudioUtilities.GetSpeakers()
 interface = devices.Activate(
     IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
