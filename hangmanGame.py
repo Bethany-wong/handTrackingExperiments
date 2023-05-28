@@ -8,13 +8,6 @@ import morseTree as morse
 import numpy as np
 import hangmanResources as resource
 
-def updateGuessedWord(answer, guessedWord, guess):
-    for position in range(len(answer)):
-        letter = answer[position]
-        if letter == guess:
-            guessedWord[position] = letter
-            return guessedWord
-
 def detectNumbers(lmList):
     tipIds = [4, 8, 12, 16, 20]  # thumb, index, middle, ring, pinkie
     fingers = []
@@ -25,20 +18,6 @@ def detectNumbers(lmList):
         else:
             fingers.append(0)
     return fingers
-
-
-def displayCurrentSymbol(fingerCnt):
-    if fingerCnt == numDot:
-        h, w, c = dotImage.shape
-        img[0:h, 0:w] = dotImage
-    elif fingerCnt == numDash:
-        h, w, c = dashImage.shape
-        img[0:h, 0:w] = dashImage
-    else:
-        h, w, c = holdImage.shape
-        img[0:h, 0:w] = holdImage
-
-print("Hello")
 
 # parameters
 numDot = 1 # number of fingers detected to represent a dot (thumb not included)
@@ -64,12 +43,16 @@ detected = False # already detected alphabet after period of inactivity
 noHandCount = 0
 
 # game variables
-stages = resource.stages
-lives = len(stages)
-answer = random.choice(resource.wordList)
+lives = 7
+answer = random.choice(resource.wordList).upper()
 print(f"answer is {answer}")
 guessedWord = ['_' for _ in range(len(answer))]
 wrongGuesses = []
+stagesList = []
+for imPath in os.listdir("hangmanImages"):
+    image = cv2.imread(f'hangmanImages/{imPath}')
+    stagesList.append(image)
+currentStageImage = stagesList[0]
 
 while True:
     success, img = cap.read()
@@ -93,13 +76,20 @@ while True:
                     print(alphabet)
                     if alphabet != None:
                         if alphabet in answer:
-                            guessedWord = updateGuessedWord(answer, guessedWord, alphabet)
+                            print("Correct guess")
+                            for position in range(len(answer)): # update guessed word list
+                                letter = answer[position]
+                                if letter == alphabet:
+                                    guessedWord[position] = letter
+                            if '_' not in guessedWord: # all letters guessed
+                                break;
                         elif alphabet not in wrongGuesses:
                             print("Wrong guess")
                             wrongGuesses.append(alphabet)
                             lives -= 1
                             if lives == 0:
                                 break
+                            currentStageImage = stagesList[7 - lives]
                         else:
                             print("You've already guessed the letter")
                     else:
@@ -112,17 +102,19 @@ while True:
             detected = False
             print(code)
 
-        displayCurrentSymbol(totalFingers)
-
 
     cTime = time.time()
     fps = 1/(cTime-pTime)
     pTime = cTime
 
     cv2.putText(img, f"FPS: {int(fps)}", (400, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0))
-    cv2.putText(img, str(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 10)
-    cv2.putText(img, str(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
-    cv2.putText(img, stages[len(stages) - lives], (10, 300), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 10)
+    cv2.putText(img, code, (200, 70), cv2.FONT_HERSHEY_PLAIN, 4, (0, 0, 0), 6)
+    cv2.putText(img, "".join(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 10)
+    cv2.putText(img, "".join(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
+    cv2.putText(img, "".join(wrongGuesses), (10, 450), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 6)
+
+    h, w, c = currentStageImage.shape
+    img[0:h, 0:w] = currentStageImage
 
     cv2.imshow("Image", img)
     cv2.waitKey(1)
@@ -130,6 +122,10 @@ while True:
 
 # end of game
 if lives == 0:
-    cv2.putText(img, "You lose", (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
+    print("")
+    print("You lose")
+    #cv2.putText(img, "You lose", (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
 else:
-    cv2.putText(img, "You won", (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
+    print("You won")
+    #cv2.putText(img, "You won", (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
+print(f"The word is: {answer}")
