@@ -11,8 +11,7 @@ morse_tree = {
             },
             '-': {
                 'value': 'U',
-                '.': {'value': 'F'},
-                '-': {'value': 'Ü'},  # german alphabet
+                '.': {'value': 'F'}
             },
         },
         '-': {

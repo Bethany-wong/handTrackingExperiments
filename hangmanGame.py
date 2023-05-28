@@ -65,9 +65,9 @@ while True:
         totalFingers = fingers.count(1)  # number of fingers detected
         if totalFingers == lastState:    # gesture is same as last frame
             cnt += 1
-            if totalFingers == numDot and cnt == 3: # write a dot after detection in 3 consecutive frames
+            if totalFingers == numDot and cnt == 2: # write a dot after detection in 3 consecutive frames
                 code += "."
-            elif totalFingers == numDash and cnt == 3: # same for dash
+            elif totalFingers == numDash and cnt == 2: # same for dash
                 code += "-"
             else:
                 if cnt > detectAlphabetAfter and detected == False: # detect alphabet after period of inactivity
@@ -101,6 +101,8 @@ while True:
             cnt = 0
             detected = False
             print(code)
+    else: # no hand detected
+        code = ""
 
 
     cTime = time.time()
@@ -108,8 +110,8 @@ while True:
     pTime = cTime
 
     cv2.putText(img, f"FPS: {int(fps)}", (400, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0))
-    cv2.rectangle(img, (180, 40), (350, 120), (0, 255, 0), cv2.FILLED) # background
-    cv2.putText(img, code, (200, 70), cv2.FONT_HERSHEY_PLAIN, 4, (0, 0, 0), 6)
+    cv2.rectangle(img, (170, 40), (350, 75), (255, 153, 51), cv2.FILLED) # background
+    cv2.putText(img, code, (180, 70), cv2.FONT_HERSHEY_PLAIN, 4, (0, 0, 0), 6)
     cv2.putText(img, "".join(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 10)
     cv2.putText(img, "".join(guessedWord), (10, 400), cv2.FONT_HERSHEY_PLAIN, 3, (0, 128, 255), 6)
     cv2.putText(img, "".join(wrongGuesses), (10, 450), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 6)
